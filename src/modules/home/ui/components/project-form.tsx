@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormField } from "@/components/ui/form";
+import { useClerk } from "@clerk/nextjs";
 
 import { PROJECT_TEMPLATES } from "../../constants";
 
@@ -27,6 +28,8 @@ export const ProjectForm = () => {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const clerk = useClerk();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,6 +48,10 @@ export const ProjectForm = () => {
     onError: (error) => {
       // TODO: Redirect to pricing page if specific error
       toast.error(error.message);
+
+      if(error.data?.code === "UNAUTHORIZED") {
+        clerk.openSignIn();
+      }
     },
   }));
   
