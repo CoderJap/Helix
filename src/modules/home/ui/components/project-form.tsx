@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormField } from "@/components/ui/form";
-import { useClerk } from "@clerk/nextjs";
 
 import { PROJECT_TEMPLATES } from "../../constants";
 
@@ -27,9 +27,8 @@ const formSchema = z.object({
 export const ProjectForm = () => {
   const router = useRouter();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const clerk = useClerk();
-
+  const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,15 +41,20 @@ export const ProjectForm = () => {
       queryClient.invalidateQueries(
         trpc.projects.getMany.queryOptions(),
       );
+      queryClient.invalidateQueries(
+        trpc.usage.status.queryOptions(),
+      );
       router.push(`/projects/${data.id}`);
-      // TODO: Invalidate usage status
     },
     onError: (error) => {
-      // TODO: Redirect to pricing page if specific error
       toast.error(error.message);
-
-      if(error.data?.code === "UNAUTHORIZED") {
+      
+      if (error.data?.code === "UNAUTHORIZED") {
         clerk.openSignIn();
+      }
+
+      if (error.data?.code === "TOO_MANY_REQUESTS") {
+        router.push("/pricing");
       }
     },
   }));
