@@ -16,6 +16,8 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
+import { ErrorBoundary } from "react-error-boundary";
+
 import { FragmentWeb } from "../views/fragment-web";
 import { ProjectHeader } from "../components/project-header";
 import { MessagesContainer } from "../components/messages-container";
@@ -39,9 +41,12 @@ export const ProjectView = ({ projectId }: Props) => {
           minSize={20}
           className="flex flex-col min-h-0"
         >
+          <ErrorBoundary fallback={<p>Project header error</p>}>
           <Suspense fallback={<p>Loading project...</p>}>
             <ProjectHeader projectId={projectId} />
           </Suspense>
+          </ErrorBoundary>
+          <ErrorBoundary fallback={<p>Messages container error</p>}>
           <Suspense fallback={<p>Loading messages...</p>}>
             <MessagesContainer
               projectId={projectId}
@@ -49,6 +54,7 @@ export const ProjectView = ({ projectId }: Props) => {
               setActiveFragment={setActiveFragment}
             />
           </Suspense>
+          </ErrorBoundary>
         </ResizablePanel>
         <ResizableHandle className="hover:bg-primary transition-colors" />
         <ResizablePanel
