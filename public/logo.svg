@@ -1,1 +1,17 @@
-<svg id="logo-44" width="41" height="40" viewBox="0 0 41 40" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M20 0C8.9543 0 0 8.9543 0 20C11.0457 20 20 11.0457 20 0Z" fill="#df9b8e" class="ccustom"></path> <path d="M20 40C31.0457 40 40 31.0457 40 20C28.9543 20 20 28.9543 20 40Z" fill="#df9b8e" class="ccustom"></path> <path d="M20 0C31.0457 0 40 8.9543 40 20C28.9543 20 20 11.0457 20 0Z" fill="#C96342" class="ccompli2"></path> <path d="M20 40C8.9543 40 -9.65645e-07 31.0457 0 20C11.0457 20 20 28.9543 20 40Z" fill="#C96342" class="ccompli2"></path> </svg>
+<svg 
+  viewBox="0 0 30 42.55"
+  width="120"
+  height="auto"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform="translate(0, 1.2768)">
+    <path 
+      fill="#DC998C" 
+      d="M15 0L20.4545 5.33333L0 25.3333V14.6667L15 0Z"
+    />
+    <path 
+      fill="#C96432" 
+      d="M2.90827 28.177L15 40L30 25.3334V14.6667L20.4545 5.33337L0 25.3334L0.0041688 25.3375L20.4545 5.33337V20.6667L11.25 29.6667V20.1324L2.90827 28.177Z"
+    />
+  </g>
+</svg>
