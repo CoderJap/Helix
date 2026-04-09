@@ -22,7 +22,7 @@ const formSchema = z.object({
   value: z.string()
     .min(1, { message: "Value is required" })
     .max(10000, { message: "Value is too long" }),
-})
+});
 
 export const ProjectForm = () => {
   const router = useRouter();
@@ -31,38 +31,24 @@ export const ProjectForm = () => {
   const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      value: "",
-    },
+    defaultValues: { value: "" },
   });
-  
+
   const createProject = useMutation(trpc.projects.create.mutationOptions({
     onSuccess: (data) => {
-      queryClient.invalidateQueries(
-        trpc.projects.getMany.queryOptions(),
-      );
-      queryClient.invalidateQueries(
-        trpc.usage.status.queryOptions(),
-      );
+      queryClient.invalidateQueries(trpc.projects.getMany.queryOptions());
+      queryClient.invalidateQueries(trpc.usage.status.queryOptions());
       router.push(`/projects/${data.id}`);
     },
     onError: (error) => {
       toast.error(error.message);
-      
-      if (error.data?.code === "UNAUTHORIZED") {
-        clerk.openSignIn();
-      }
-
-      if (error.data?.code === "TOO_MANY_REQUESTS") {
-        router.push("/pricing");
-      }
+      if (error.data?.code === "UNAUTHORIZED") clerk.openSignIn();
+      if (error.data?.code === "TOO_MANY_REQUESTS") router.push("/pricing");
     },
   }));
-  
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await createProject.mutateAsync({
-      value: values.value,
-    });
+    await createProject.mutateAsync({ value: values.value });
   };
 
   const onSelect = (value: string) => {
@@ -72,19 +58,23 @@ export const ProjectForm = () => {
       shouldTouch: true,
     });
   };
-  
+
   const [isFocused, setIsFocused] = useState(false);
   const isPending = createProject.isPending;
   const isButtonDisabled = isPending || !form.formState.isValid;
 
   return (
     <Form {...form}>
-      <section className="space-y-6">
+      <section className="space-y-4">
+
+        {/* Textarea card */}
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className={cn(
-            "relative border p-4 pt-1 rounded-xl bg-sidebar dark:bg-sidebar transition-all",
-            isFocused && "shadow-xs",
+            "rounded-xl border bg-card transition-all duration-200 overflow-hidden",
+            isFocused
+              ? "border-primary/60 shadow-[0_0_0_3px_oklch(0.6716_0.1368_48.5130_/_0.08)]"
+              : "border-border"
           )}
         >
           <FormField
@@ -96,10 +86,10 @@ export const ProjectForm = () => {
                 disabled={isPending}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                minRows={2}
+                minRows={3}
                 maxRows={8}
-                className="pt-4 resize-none border-none w-full outline-none bg-transparent"
-                placeholder="What would you like to build?"
+                className="w-full resize-none bg-transparent px-5 pt-5 pb-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none border-none leading-relaxed"
+                placeholder="Describe what you'd like to build..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                     e.preventDefault();
@@ -109,41 +99,48 @@ export const ProjectForm = () => {
               />
             )}
           />
-          <div className="flex gap-x-2 items-end justify-between pt-2">
-            <div className="text-[10px] text-muted-foreground font-mono">
-              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                <span>&#8984;</span>Enter
+
+          {/* Bottom bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60 font-mono">
+              <kbd className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm">
+                ⌘ Enter
               </kbd>
-              &nbsp;to submit
+              <span>to submit</span>
             </div>
             <Button
+              type="submit"
               disabled={isButtonDisabled}
               className={cn(
-                "size-8 rounded-full",
-                isButtonDisabled && "bg-muted-foreground border"
+                "h-8 w-8 rounded-full p-0 transition-all duration-200",
+                isButtonDisabled
+                  ? "bg-muted text-muted-foreground border border-border shadow-none cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
               )}
             >
-              {isPending ? (
-                <Loader2Icon className="size-4 animate-spin" />
-              ) : (
-                <ArrowUpIcon />
-              )}
+              {isPending
+                ? <Loader2Icon className="size-3.5 animate-spin" />
+                : <ArrowUpIcon className="size-3.5" />
+              }
             </Button>
           </div>
         </form>
-        <div className="flex-wrap justify-center gap-2 hidden md:flex max-w-3xl">
+
+        {/* Template chips */}
+        <div className="hidden md:flex flex-wrap justify-center gap-2">
           {PROJECT_TEMPLATES.map((template) => (
-            <Button 
+            <button
               key={template.title}
-              variant="outline"
-              size="sm"
-              className="bg-white dark:bg-sidebar"
+              type="button"
               onClick={() => onSelect(template.prompt)}
+              className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all duration-150 font-medium"
             >
-              {template.emoji} {template.title}
-            </Button>
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/50 group-hover:bg-primary transition-colors duration-150 shrink-0" />
+              {template.title}
+            </button>
           ))}
         </div>
+
       </section>
     </Form>
   );
