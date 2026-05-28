@@ -10,6 +10,7 @@ import { makeQueryClient } from './query-client';
 import type { AppRouter } from './routers/_app';
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 let browserQueryClient: QueryClient;
+
 function getQueryClient() {
   if (typeof window === 'undefined') {
     // Server: always make a new query client
@@ -22,13 +23,32 @@ function getQueryClient() {
   if (!browserQueryClient) browserQueryClient = makeQueryClient();
   return browserQueryClient;
 }
-function getUrl() {
-  const base = (() => {
-    if (typeof window !== 'undefined') return '';
+
+function getBaseUrl() {
+  if (typeof window !== 'undefined') return '';
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
-  })();
-  return `${base}/api/trpc`;
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  const port = process.env.PORT ?? '3000';
+  return `http://127.0.0.1:${port}`;
 }
+
+function getUrl() {
+  const base = getBaseUrl();
+
+  if (!base) {
+    return '/api/trpc';
+  }
+
+  return `${base.replace(/\/$/, '')}/api/trpc`;
+}
+
 export function TRPCReactProvider(
   props: Readonly<{
     children: React.ReactNode;

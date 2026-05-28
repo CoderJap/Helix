@@ -1,38 +1,5 @@
 import Image from "next/image";
-import { useState , useEffect} from "react";
-
-
-const ShimmerMessages = () =>{
-    const messages = [
-        "Thinking...",
-        "Loading...",
-        "Generating...",
-        "Analyzing your request...",
-        "Building your website...",
-        "Crafting components...",
-        "Optimizing layouts...",
-        "Adding final touches...",
-        "Almost ready...",
-    ];
-
-    const [ currentMessageIndex , setCurrentMessageIndex] = useState(0);
-
-    useEffect(()=>{
-        const interval = setInterval(() =>{
-            setCurrentMessageIndex((prev) => (prev+1) % messages.length);
-        },2000)
-
-        return () => clearInterval(interval);
-    }, [messages.length]);
-
-    return (
-        <div className="flex items-center gap-2">
-            <span className="text-base text-muted-foreground animate-pulse">
-                {messages[currentMessageIndex]}
-            </span>
-        </div>
-    )
-};
+import { Loader2Icon } from "lucide-react";
 
 export const MessageLoading = () =>{
     return (
@@ -48,8 +15,22 @@ export const MessageLoading = () =>{
 
                 <span className="text-sm font-medium">Helix</span>
             </div>
-            <div className="pl-8.5 flex flex-col gap-y-4">
-                <ShimmerMessages/>
+            <div className="pl-8.5">
+                <div className="max-w-xl rounded-xl border border-border/70 bg-background/65 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium tracking-tight">Starting generation</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Setting up the builder. Live stage updates will appear in a moment.
+                            </p>
+                        </div>
+                        <Loader2Icon className="size-4 animate-spin text-primary"/>
+                    </div>
+
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full w-2/5 rounded-full bg-linear-to-r from-primary/65 to-primary animate-pulse"/>
+                    </div>
+                </div>
             </div>
         </div>
     )

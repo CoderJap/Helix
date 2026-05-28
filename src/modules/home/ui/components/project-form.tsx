@@ -35,10 +35,9 @@ export const ProjectForm = () => {
   });
 
   const createProject = useMutation(trpc.projects.create.mutationOptions({
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries(trpc.projects.getMany.queryOptions());
       queryClient.invalidateQueries(trpc.usage.status.queryOptions());
-      router.push(`/projects/${data.id}`);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -48,7 +47,22 @@ export const ProjectForm = () => {
   }));
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await createProject.mutateAsync({ value: values.value });
+    try {
+      const createdProject = await createProject.mutateAsync({ value: values.value });
+
+      const targetUrl = `/projects/${createdProject.id}`;
+
+      router.replace(targetUrl);
+
+      // Fallback for rare cases where client navigation is swallowed by runtime state.
+      window.setTimeout(() => {
+        if (window.location.pathname === "/") {
+          window.location.assign(targetUrl);
+        }
+      }, 1200);
+    } catch {
+      // Errors are handled in mutation onError.
+    }
   };
 
   const onSelect = (value: string) => {
@@ -73,7 +87,7 @@ export const ProjectForm = () => {
           className={cn(
             "rounded-xl border bg-card transition-all duration-200 overflow-hidden",
             isFocused
-              ? "border-primary/60 shadow-[0_0_0_3px_oklch(0.6716_0.1368_48.5130_/_0.08)]"
+              ? "border-primary/60 shadow-[0_0_0_3px_oklch(0.6716_0.1368_48.5130/0.08)]"
               : "border-border"
           )}
         >

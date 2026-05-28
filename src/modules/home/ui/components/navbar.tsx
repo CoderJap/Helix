@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Show, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton, useAuth, useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
-import { SunIcon, MoonIcon, FolderOpenIcon, ZapIcon } from "lucide-react";
+import { SunIcon, MoonIcon, FolderOpenIcon, ZapIcon, CrownIcon } from "lucide-react";
 import UserControl from "@/components/user-control";
 import { Button } from "@/components/ui/button";
 import { useScroll } from "@/hooks/use-scroll";
@@ -19,6 +19,7 @@ export const Navbar = () => {
   const isScrolled = useScroll();
   const { theme, setTheme } = useTheme();
   const { isSignedIn } = useUser();
+  const { has } = useAuth();
   const trpc = useTRPC();
 
   const { data: usage } = useQuery({
@@ -26,9 +27,9 @@ export const Navbar = () => {
     enabled: !!isSignedIn,
   });
 
+  const hasProAccess = !!has?.({ plan: "pro" });
   const consumedPoints = usage?.consumedPoints ?? 0;
-  const isPro = consumedPoints <= PRO_POINTS && consumedPoints > FREE_POINTS;
-  const maxPoints = isPro ? PRO_POINTS : FREE_POINTS;
+  const maxPoints = hasProAccess ? PRO_POINTS : FREE_POINTS;
   const remainingPoints = Math.max(0, maxPoints - consumedPoints);
   const usagePercent = Math.min(100, (consumedPoints / maxPoints) * 100);
 
@@ -102,6 +103,32 @@ export const Navbar = () => {
               <FolderOpenIcon className="size-3.5" />
               Projects
             </button>
+
+            <Link
+              href="/pricing"
+              className={cn(
+                "hidden sm:inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border transition-colors duration-150",
+                hasProAccess
+                  ? "border-amber-400/70 bg-amber-300/20 text-amber-900 hover:bg-amber-300/30 dark:text-amber-200"
+                  : "border-amber-300/60 bg-amber-200/40 text-amber-900 hover:bg-amber-200/60 dark:text-amber-200",
+              )}
+            >
+              <CrownIcon className="size-3.5" />
+              {hasProAccess ? "Gold Active" : "Get Gold"}
+            </Link>
+
+            <Link
+              href="/pricing"
+              aria-label={hasProAccess ? "Gold Active" : "Get Gold"}
+              className={cn(
+                "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors duration-150 sm:hidden",
+                hasProAccess
+                  ? "border-amber-400/70 bg-amber-300/20 text-amber-900 hover:bg-amber-300/30 dark:text-amber-200"
+                  : "border-amber-300/60 bg-amber-200/40 text-amber-900 hover:bg-amber-200/60 dark:text-amber-200",
+              )}
+            >
+              <CrownIcon className="size-3.5" />
+            </Link>
 
           </Show>
 

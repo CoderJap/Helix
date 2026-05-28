@@ -4,7 +4,11 @@ import { TRPCError } from "@trpc/server";
 import  prisma  from "@/lib/db";
 import { inngest } from "@/inngest/client";
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
-import { consumeCredits } from "@/lib/usage";
+import { consumeCredits, isUsageLimitError } from "@/lib/usage";
+import { createInitialGenerationProgress } from "@/modules/projects/lib/generation-progress";
+
+const GENERATION_START_FAILED_MESSAGE =
+  "We could not start generation right now. Please retry in a few seconds.";
 
 export const messagesRouter = createTRPCRouter({
   getMany: protectedProcedure
@@ -25,7 +29,7 @@ export const messagesRouter = createTRPCRouter({
           fragment: true,
         },
         orderBy: {
-          updatedAt: "asc",
+          createdAt: "asc",
         },
       });
 
@@ -55,32 +59,70 @@ export const messagesRouter = createTRPCRouter({
       try {
         await consumeCredits();
       } catch (error) {
-        if (error instanceof Error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Something went wrong" });
-        } else {
+        if (isUsageLimitError(error)) {
           throw new TRPCError({
             code: "TOO_MANY_REQUESTS",
             message: "You have run out of credits"
           });
         }
+
+        console.error("Failed to consume credits for message creation", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Something went wrong" });
       }
 
-      const createdMessage = await prisma.message.create({
-        data: {
-          projectId: existingProject.id,
-          content: input.value,
-          role: "USER",
-          type: "RESULT",
-        },
-      });
+      const { createdMessage, progressMessageId } = await prisma.$transaction(
+        async (tx) => {
+          const message = await tx.message.create({
+            data: {
+              projectId: existingProject.id,
+              content: input.value,
+              role: "USER",
+              type: "RESULT",
+            },
+          });
 
-      await inngest.send({
-        name: "code-agent/run",
-        data: {
-          value: input.value,
-          projectId: input.projectId,
+          const progressMessage = await tx.message.create({
+            data: {
+              projectId: existingProject.id,
+              role: "ASSISTANT",
+              type: "RESULT",
+              content: createInitialGenerationProgress(),
+            },
+          });
+
+          return {
+            createdMessage: message,
+            progressMessageId: progressMessage.id,
+          };
         },
-      });
+      );
+
+      try {
+        await inngest.send({
+          name: "code-agent/run",
+          data: {
+            value: input.value,
+            projectId: input.projectId,
+            progressMessageId,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to enqueue message generation", error);
+
+        try {
+          await prisma.message.update({
+            where: {
+              id: progressMessageId,
+            },
+            data: {
+              type: "ERROR",
+              content: GENERATION_START_FAILED_MESSAGE,
+            },
+          });
+        } catch (updateError) {
+          console.error("Failed to persist message enqueue error", updateError);
+        }
+      }
 
       return createdMessage;
     }),

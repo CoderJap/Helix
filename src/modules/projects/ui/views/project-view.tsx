@@ -21,6 +21,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { FragmentWeb } from "../views/fragment-web";
 import { ProjectHeader } from "../components/project-header";
 import { MessagesContainer } from "../components/messages-container";
+import { GithubSyncButton } from "../components/github-sync-button";
 
 interface Props {
   projectId: string;
@@ -84,6 +85,10 @@ export const ProjectView = ({ projectId }: Props) => {
                     </Link>
                   </Button>
                 )}
+                <GithubSyncButton
+                  projectId={projectId}
+                  activeFragment={activeFragment}
+                />
                 <UserControl />
               </div>
             </div>

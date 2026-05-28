@@ -1,10 +1,12 @@
 import {MessageRole , Fragment , MessageType} from "@/generated/prisma";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { decodeGenerationProgress } from "../../lib/generation-progress";
 
 import {format} from "date-fns";
 import Image from "next/image";
 import { Code2Icon , ChevronRightIcon} from "lucide-react";
+import { GenerationProgressMessage } from "./generation-progress-message";
 
 interface UserMessageProps {
     content: string;
@@ -75,6 +77,8 @@ const AssistantMessage = ({
     type,
 }: AssistantMessageProps) =>{
 
+    const progressPayload = decodeGenerationProgress(content);
+
     return (
         <div className={cn(
             "flex flex-col group px-2 pb-4",
@@ -95,7 +99,11 @@ const AssistantMessage = ({
             </div>
 
             <div className="pl-8.5 flex flex-col gap-y-4">
-                <span>{content}</span>
+                {progressPayload ? (
+                    <GenerationProgressMessage progress={progressPayload}/>
+                ) : (
+                    <span className="whitespace-pre-wrap">{content}</span>
+                )}
 
                 {fragment && type === "RESULT" && (
                     <FragmentCard

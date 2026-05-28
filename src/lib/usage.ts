@@ -8,6 +8,34 @@ const PRO_POINTS = 100;
 const DURATION = 30 * 24 * 60 * 60; // 30 days
 const GENERATION_COST = 1;
 
+interface UsageLimitError {
+  msBeforeNext: number;
+  remainingPoints: number;
+  consumedPoints: number;
+  isFirstInDuration: boolean;
+}
+
+const isNumber = (value: unknown): value is number => {
+  return typeof value === "number" && Number.isFinite(value);
+};
+
+export const isUsageLimitError = (
+  error: unknown,
+): error is UsageLimitError => {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const candidate = error as Partial<UsageLimitError>;
+
+  return (
+    isNumber(candidate.msBeforeNext) &&
+    isNumber(candidate.remainingPoints) &&
+    isNumber(candidate.consumedPoints) &&
+    typeof candidate.isFirstInDuration === "boolean"
+  );
+};
+
 export async function getUsageTracker() {
   const { has } = await auth();
   const hasProAccess = has({ plan: "pro" });

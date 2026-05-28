@@ -1,14 +1,9 @@
-"use client";
-
 import Image from "next/image";
-import { dark } from "@clerk/themes";
-import { PricingTable } from "@clerk/nextjs";
+import { PricingTableClient } from "@/modules/home/ui/components/pricing-table-client";
 
-import { useCurrentTheme } from "@/hooks/use-current-theme";
+export const dynamic = "force-dynamic";
 
 const Page = () => {
-  const currentTheme = useCurrentTheme();
-
   return ( 
     <div className="flex flex-col max-w-3xl mx-auto w-full">
       <section className="space-y-6 pt-[16vh] 2xl:pt-48">
@@ -25,14 +20,7 @@ const Page = () => {
         <p className="text-muted-foreground text-center text-sm md:text-base">
           Choose the plan that fits your needs
         </p>
-        <PricingTable
-          appearance={{
-            baseTheme: currentTheme === "dark" ? dark : undefined,
-            elements: {
-              pricingTableCard: "border! shadow-none! rounded-lg!"
-            }
-          }}
-        />
+        <PricingTableClient />
       </section>
     </div>
    );
